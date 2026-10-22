@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Bank Web App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 40px;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        h3 { margin-top: 0; color: #333; }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background-color: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e2f0d9;
+            color: #385723;
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">🏦 Python Bank</div>
+        <p>सुरक्षित और तेज ऑनलाइन बैंकिंग</p>
+    </div>
+
+    <!-- 1. नया अकाउंट बनाएं -->
+    <div class="section">
+        <h3>नया बैंक अकाउंट खोलें</h3>
+        <input type="text" id="newName" placeholder="खाताधारक का नाम">
+        <input type="number" id="newDeposit" placeholder="प्रारंभिक राशि (Initial Deposit)">
+        <button onclick="createAccount()">अकाउंट बनाएं</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <!-- 2. बैलेंस चेक करें -->
+    <div class="section">
+        <h3>बैलेंस चेक करें</h3>
+        <input type="text" id="checkAccNo" placeholder="अकाउंट नंबर दर्ज करें">
+        <button onclick="checkBalance()">बैलेंस देखें</button>
+        <div id="balanceResult" class="result"></div>
+    </div>
+
+    <!-- 3. पैसे जमा या निकालें -->
+    <div class="section">
+        <h3>लेन-देन (Deposit / Withdraw)</h3>
+        <input type="text" id="transAccNo" placeholder="अकाउंट नंबर">
+        <input type="number" id="transAmount" placeholder="राशि (Amount)">
+        <button onclick="doTransaction('/api/deposit')" style="background-color: #28a745;">पैसे जमा करें (Deposit)</button>
+        <button onclick="doTransaction('/api/withdraw')" style="background-color: #dc3545;">पैसे निकालें (Withdraw)</button>
+        <div id="transResult" class="result"></div>
+    </div>
+</div>
+
+<script>
+    async function createAccount() {
+        const name = document.getElementById('newName').value;
+        const deposit = document.getElementById('newDeposit').value;
+        
+        const response = await fetch('/api/create_account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, deposit })
+        });
+        const data = await response.json();
+        
+        const resDiv = document.getElementById('createResult');
+        resDiv.style.display = 'block';
+        if(data.success) {
+            resDiv.innerHTML = `${data.message} आपका अकाउंट नंबर है: <b>${data.account_no}</b>`;
+        } else {
+            resDiv.innerHTML = data.message;
+        }
+    }
+
+    async function checkBalance() {
+        const accNo = document.getElementById('checkAccNo').value;
+        const response = await fetch(`/api/balance/${accNo}`);
+        const data = await response.json();
+        
+        const resDiv = document.getElementById('balanceResult');
+        resDiv.style.display = 'block';
+        if(data.success) {
+            resDiv.innerHTML = `नाम: ${data.name} | कुल बैलेंस: ₹<b>${data.balance}</b>`;
+        } else {
+            resDiv.innerHTML = data.message;
+        }
+    }
+
+    async function doTransaction(url) {
+        const account_no = document.getElementById('transAccNo').value;
+        const amount = document.getElementById('transAmount').value;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_no, amount })
+        });
+        const data = await response.json();
+        
+        const resDiv = document.getElementById('transResult');
+        resDiv.style.display = 'block';
+        if(data.success) {
+            resDiv.innerHTML = `${data.message} | नया बैलेंस: ₹<b>${data.new_balance}</b>`;
+        } else {
+            resDiv.innerHTML = data.message;
+        }
+    }
+</script>
+
+</body>
+</html>
